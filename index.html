@@ -1,0 +1,469 @@
+
+<!--	Name:	Sidney Levine
+Course:	235.01
+HomeWork:	#2
+Git-Hub:	
+-->	
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yahtzee Game</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Yahtzee</h1>
+        <p>
+            Round: <span id="round-span"></span>, Roll: <span id="roll-span"></span>
+        </p>
+    </header>
+    
+    <main>
+        <div class="dice-container">
+            <img src="./img/diceX0.gif" id="dice-1" class="dice" alt="Dice 1">
+            <img src="./img/diceX0.gif" id="dice-2" class="dice" alt="Dice 2">
+            <img src="./img/diceX0.gif" id="dice-3" class="dice" alt="Dice 3">
+            <img src="./img/diceX0.gif" id="dice-4" class="dice" alt="Dice 4">
+            <img src="./img/diceX0.gif" id="dice-5" class="dice" alt="Dice 5">
+        </div>
+
+        <div class="gameplay">
+            <div class="score">
+                <table>
+                    <tr>
+                        <th>1's</th>
+                        <td><input type="text" id = "ones" class = "scorebox" readonly="" title=""></td>
+                    </tr>
+
+                    <tr>
+                        <th>2's</th>
+                        <td><input type="text" id = "twos" class = "scorebox" readonly="" title=""></td>
+                    </tr>
+
+                    <tr>
+                        <th>3's</th>
+                        <td><input type="text" id = "threes" class = "scorebox" readonly="" title=""></td>
+                    </tr>
+
+                    <tr>
+                        <th>4's</th>
+                        <td><input type="text" id = "fours" class = "scorebox" readonly="" title=""></td>
+                    </tr>
+
+                    <tr>
+                        <th>5's</th>
+                        <td><input type="text" id = "fives" class = "scorebox" readonly="" title=""></td>
+                    </tr>
+
+                    <tr>
+                        <th>6's</th>
+                        <td><input type="text" id = "sixes" class = "scorebox" readonly="" title=""></td>
+                    </tr>
+
+                    <tr>
+                        <th>3 of a Kind</th>
+                        <td><input type="text" id = "three-of-a-kind" class = "scorebox" readonly="" title=""></td>
+                    </tr>
+
+                    <tr>
+                        <th>4 of a Kind</th>
+                        <td><input type="text" id = "four-of-a-kind" class = "scorebox" readonly="" title=""></td>
+                    </tr>
+
+                    <tr>
+                        <th>Yahtzee</th>
+                        <td><input type="text" id = "yahtzee" class = "scorebox" readonly="" title=""></td>
+                    </tr>
+
+                    <tr>
+                        <th>Total</th>
+                        <td><input type="text" id = "total" readonly="" title=""></td>
+                    </tr>
+
+
+                </table>
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" id = "roll-btn">Roll</button>
+                <button type="button" id = "new-game-btn">New Game</button>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        window.addEventListener('load', function(){
+            /* 
+            
+            CONSTANTS 
+            
+            */
+            const MAX_ROLLS = 3;
+            const MAX_ROUNDS = 9;
+            const DICE_SIDES = 6;
+            
+            /* 
+            
+            THE HTML ELEMENTS TO BE USED DURING GAMEPLAY 
+            
+            */
+            
+            // action buttons
+            const rollBtn = document.querySelector('#roll-btn');
+            const newGameBtn = document.querySelector('#new-game-btn');
+
+            // score boxes
+            const ones = document.querySelector('#ones');
+            const twos = document.querySelector('#twos');
+            const threes = document.querySelector('#threes');
+            const fours = document.querySelector('#fours');
+            const fives = document.querySelector('#fives');
+            const sixes = document.querySelector('#sixes');
+            
+            const threeOfAKind = document.querySelector('#three-of-a-kind');
+            const fourOfAKind = document.querySelector('#four-of-a-kind');
+            const yahtzee = document.querySelector('#yahtzee');
+            const total = document.querySelector('#total');
+
+            // dice
+            const dice1 = document.querySelector('#dice-1');
+            const dice2 = document.querySelector('#dice-2');
+            const dice3 = document.querySelector('#dice-3');
+            const dice4 = document.querySelector('#dice-4');
+            const dice5 = document.querySelector('#dice-5');
+
+            /* 
+            
+            VARIABLES TO HOLD GAME DATA 
+            
+            */
+
+            let currentRoll = 1;
+            let round = 1;
+
+            let onesScore = 0;
+            let twosScore = 0;
+            let threesScore = 0;
+            let foursScore = 0;
+            let fivesScore = 0;
+            let sixsScore = 0;
+
+            let threeOfAKindScore = 0;
+            let fourOfAKindScore = 0;
+            let yahtzeeScore = 0;
+            let totalScore = 0;
+
+            let yahtzeeBonus = 0;
+
+            /* 
+            
+            EVENT LISTENERS 
+            
+            */
+
+            // buttons
+            newGameBtn.addEventListener('click', function(){            
+                // initialize the dice
+                initializeDice();
+
+                // reset the variables
+                currentRoll = 1;
+                round = 1;
+
+                resetTableScore();
+
+                updateStatus();
+
+                //empty the score boxes
+                document.querySelectorAll('.scorebox').forEach(function(scorebox){
+                    scorebox.value = '';
+                    scorebox.setAttribute('title', '');
+                });
+
+                rollBtn.removeAttribute('disabled');
+
+                total.value = '';
+            });
+
+            rollBtn.addEventListener('click', function(){
+                roll();
+            });
+
+            // score boxes
+            document.querySelectorAll('.scorebox').forEach(function(scorebox){
+                scorebox.addEventListener('click', function(){
+                    if(scorebox.value == '' && scorebox.getAttribute('title') != undefined && scorebox.getAttribute('title') != ''){
+                        scorebox.value = scorebox.getAttribute('title');
+
+                        removeHoverScore();
+                        
+                        if(round < MAX_ROUNDS){
+                            nextRound();
+                        }else{
+                            rollBtn.setAttribute('disabled', true);
+                            let totalScore = calculateTotalScore();
+                            alert('Game over. You scored ' + totalScore + ' points.');
+                        }
+                    }
+                });
+            });
+              
+            // dice images
+            document.querySelectorAll('.dice').forEach(function(dice){
+                dice.addEventListener('click', function(){
+                    // only toggle if not the first roll
+                    if(currentRoll == 2 || currentRoll == 3){
+                        if(dice.getAttribute('data-locked') == '0' && dice.getAttribute('data-value') != '0'){
+                            dice.setAttribute('data-locked', 1);
+                            dice.setAttribute('src', `./img/dice${dice.getAttribute('data-value')}.gif`);
+                        }else if(dice.getAttribute('data-locked') == '1' && dice.getAttribute('data-value') != '0'){
+                            dice.setAttribute('data-locked', 0);
+                            dice.setAttribute('src', `./img/diceX${dice.getAttribute('data-value')}.gif`);
+                        }
+                    }
+                });
+            });
+            
+            /* 
+            
+            FUNCTIONS 
+            
+            */
+
+            function roll(){
+                // if the current roll is between 1 and 3, allow the user to roll again
+                
+                if(currentRoll <= MAX_ROLLS){
+                    //roll the dice
+                    document.querySelectorAll('.dice').forEach(function(img){
+
+                        let locked = img.getAttribute('data-locked');
+                        let value = generateRandomDice();
+
+                        if(locked == '0'){
+                            img.setAttribute('data-value', value);
+                            img.setAttribute('data-locked', 0);
+                            img.setAttribute('src', `/img/diceX${value}.gif`);
+                        }
+                    });
+
+                    // calculate the possible scores
+                    calculatePossibleScores();
+                     
+                    //update the score the user sees when they hover over a score box
+                    updateHoverScore();
+
+                    //update the status
+                    updateStatus();
+
+                    currentRoll +=1;
+                }else{
+                    alert('You must score before proceeding');
+                    rollBtn.setAttribute('disabled', true);
+                }
+            }
+
+            // function to advance to the next round
+            function nextRound(){
+                initializeDice();
+
+                currentRoll = 1;
+                round += 1;
+
+                rollBtn.removeAttribute('disabled');
+            }
+
+            // function to calculate the possible scores
+            function calculatePossibleScores(){
+                resetTableScore();
+
+                let onesCount = 0;
+                let twosCount = 0;
+                let threesCount = 0;
+                let foursCount = 0;
+                let fivesCount = 0;
+                let sixesCount = 0;
+
+                // event listener to get the values of the dice faces and calculate their scores
+                document.querySelectorAll('.dice').forEach(function(dice){
+                    
+                    // get the die face values
+                    if(dice.getAttribute('data-value') == '1'){
+                        onesScore += 1;
+                        onesCount += 1;
+                    }
+
+                    if(dice.getAttribute('data-value') == '2'){
+                        twosScore += 2;
+                        twosCount += 1;
+                    }
+
+                    if(dice.getAttribute('data-value') == '3'){
+                        threesScore += 3;
+                        threesCount += 1;
+                    }
+
+                    if(dice.getAttribute('data-value') == '4'){
+                        foursScore += 4;
+                        foursCount += 1;
+                    }
+
+                    if(dice.getAttribute('data-value') == '5'){
+                        fivesScore += 5;
+                        fivesCount += 1;
+                    }
+
+                    if(dice.getAttribute('data-value') == '6'){
+                        sixsScore += 6;
+                        sixesCount +=1;
+                    }
+
+                    // calculate three of a kind score
+                    if(onesCount == 3 || twosCount == 3 || threesCount == 3 || foursCount == 3 || fivesCount == 3 || sixesCount == 3){
+                        threeOfAKindScore = onesScore + twosScore + threesScore + foursScore + fivesScore + sixsScore;
+                    }
+
+                    // calculate the four of a kind score
+                    if(onesCount == 4 || twosCount == 4 || threesCount == 4 || foursCount == 4 || fivesCount == 4 || sixesCount == 4){
+                        fourOfAKindScore = onesScore + twosScore + threesScore + foursScore + fivesScore + sixsScore;
+                    }
+
+                    // calculate the yahtzee score
+                    if(onesCount == 5 || twosCount == 5 || threesCount == 5 || foursCount == 5 || fivesCount == 5 || sixesCount == 5){
+                        yahtzeeScore = onesScore + twosScore + threesScore + foursScore + fivesScore + sixsScore;
+                        
+                        // add a yahtzee bonus if the player has already striked a yahtzee
+                        if(yahtzee.value != '' && parseInt(yahtzee.value) > 0){
+                            yahtzeeBonus += 100;
+                        }
+                    }
+                });
+            }
+
+            // this method updates the score that is displayes when a user hovers over a potential
+            // score box
+            function updateHoverScore(){
+                if(ones.value == ''){
+                    ones.setAttribute('title', onesScore);
+                }else{
+                    ones.setAttribute('title', '');
+                }
+
+                if(twos.value == ''){
+                    twos.setAttribute('title', twosScore);
+                }else{
+                    twos.setAttribute('title', '');
+                }
+
+                if(threes.value == ''){
+                    threes.setAttribute('title', threesScore);
+                }else{
+                    threes.setAttribute('title', '');
+                }
+
+                if(fours.value == ''){
+                    fours.setAttribute('title', foursScore);
+                }else{
+                    fours.setAttribute('title', '');
+                }
+
+                if(fives.value == ''){
+                    fives.setAttribute('title', fivesScore);
+                }else{
+                    fives.setAttribute('title', '');
+                }
+
+                if(sixes.value == ''){
+                    sixes.setAttribute('title', sixsScore);
+                }else{
+                    sixes.setAttribute('title', '');
+                }
+
+                if(threeOfAKind.value == ''){
+                    threeOfAKind.setAttribute('title', threeOfAKindScore);
+                }else{
+                    threeOfAKind.setAttribute('title', '');
+                }
+
+                if(fourOfAKind.value == ''){
+                    fourOfAKind.setAttribute('title', fourOfAKindScore);
+                }else{
+                    fourOfAKind.setAttribute('title', '');
+                }
+
+                if(yahtzee.value == ''){
+                    yahtzee.setAttribute('title', yahtzeeScore);
+                }else{
+                    yahtzee.setAttribute('title', '');
+                }
+            }
+
+            //clear display on hover
+            function removeHoverScore(){
+                // score boxes
+                document.querySelectorAll('.scorebox').forEach(function(scorebox){
+                    scorebox.setAttribute('title', '');
+                });
+            }
+
+            // fuction claculate total score
+            function calculateTotalScore(){
+                let totalScore =    parseInt(ones.value) + parseInt(twos.value) + 
+                                    parseInt(threes.value) + parseInt(fours.value) + parseInt(fives.value) + 
+                                    parseInt(sixes.value) + parseInt(threeOfAKind.value) + 
+                                    parseInt(fourOfAKind.value) + parseInt(yahtzee.value) + yahtzeeBonus;
+
+                total.value = totalScore;
+
+                return totalScore;
+            }
+
+            // function to display the current round and roll to the user
+            function updateStatus(){
+                document.getElementById('round-span').innerHTML = round;
+                document.getElementById('roll-span').innerHTML = currentRoll;
+            }
+
+            // function to reset the table score to 0
+            function resetTableScore(){
+                onesScore = 0;
+                twosScore = 0;
+                threesScore = 0;
+                foursScore = 0;
+                fivesScore = 0;
+                sixsScore = 0;
+
+                threeOfAKindScore = 0;
+                fourOfAKindScore = 0;
+                yahtzeeScore = 0;
+                totalScore = 0;
+            }
+
+            // function to initialize dice i.e. make all the dice blank face
+            function initializeDice(){
+                document.querySelectorAll('.dice').forEach(function(img){
+                    img.setAttribute('src', './img/diceX0.gif');
+                    img.setAttribute('data-value', 0);
+                    img.setAttribute('data-locked', 0);
+                });
+            }
+
+            // function to generate a random number between 1 and 6 when a dice is rolled
+            function generateRandomDice(){
+                return Math.floor(Math.random() * (DICE_SIDES - 1 + 1)) + 1;
+            }
+
+            // display the current roll and round
+            updateStatus();
+
+            // prepare the dice for first game play
+            initializeDice();
+
+        });
+    </script>
+</body>
+</html>
